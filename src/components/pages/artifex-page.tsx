@@ -65,11 +65,17 @@ export function ArtifexPage() {
     setIsLoading(true);
     setGeneratedImages([]);
     
-    let fullPrompt = `${data.prompt}, style: ${data.style}`;
-    if(data.artist && data.artist !== 'none') {
-        fullPrompt += `, in the style of ${data.artist}`;
+    let finalPrompt = data.prompt;
+    if (activeTab === 'text-to-image') {
+        let textToImagePrompt = `${data.prompt}, style: ${data.style}`;
+        if(data.artist && data.artist !== 'none') {
+            textToImagePrompt += `, in the style of ${data.artist}`;
+        }
+        textToImagePrompt += `, aspect ratio: ${data.aspectRatio}`;
+        finalPrompt = textToImagePrompt;
+    } else {
+        finalPrompt = `${data.prompt}, aspect ratio: ${data.aspectRatio}`;
     }
-    fullPrompt += `, aspect ratio: ${data.aspectRatio}`;
 
     try {
       let result: { variations?: string[]; imageUrl?: string; enhancedImageDataUri?: string; generatedImageDataUri?: string };
@@ -82,22 +88,22 @@ export function ArtifexPage() {
 
       switch (activeTab) {
         case "text-to-image":
-          result = await generateImageFromText({ prompt: fullPrompt });
+          result = await generateImageFromText({ prompt: finalPrompt });
           if(result.imageUrl) images.push(result.imageUrl);
           break;
         case "variations":
             if (!referenceImageUri) throw new Error("Reference image is required for variations.");
-            result = await generateVariationsFromReference({ referenceImage: referenceImageUri, prompt: data.prompt, numberOfVariations: 4 });
+            result = await generateVariationsFromReference({ referenceImage: referenceImageUri, prompt: finalPrompt, numberOfVariations: 4 });
             if(result.variations) images = result.variations;
           break;
         case "enhance":
             if (!referenceImageUri) throw new Error("Image to enhance is required.");
-            result = await enhanceExistingImage({ existingImageDataUri: referenceImageUri, enhancementDescription: data.enhancementDescription || data.prompt });
+            result = await enhanceExistingImage({ existingImageDataUri: referenceImageUri, enhancementDescription: data.enhancementDescription || finalPrompt });
             if(result.enhancedImageDataUri) images.push(result.enhancedImageDataUri);
           break;
         case "style-transfer":
             if (!referenceImageUri) throw new Error("Reference image is required for style transfer.");
-            result = await maintainStyleConsistency({ referenceImageDataUri: referenceImageUri, promptText: data.prompt });
+            result = await maintainStyleConsistency({ referenceImageDataUri: referenceImageUri, promptText: finalPrompt });
             if(result.generatedImageDataUri) images.push(result.generatedImageDataUri);
           break;
         default:
