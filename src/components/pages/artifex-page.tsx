@@ -52,6 +52,8 @@ export function ArtifexPage() {
     },
   });
 
+  const { formState: { isSubmitting } } = form;
+
   const fileToDataUri = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -65,7 +67,7 @@ export function ArtifexPage() {
     setIsLoading(true);
     setGeneratedImages([]);
     
-    let finalPrompt = data.prompt;
+    let finalPrompt = `${data.prompt}, aspect ratio: ${data.aspectRatio}`;
     if (activeTab === 'text-to-image') {
         let textToImagePrompt = `${data.prompt}, style: ${data.style}`;
         if(data.artist && data.artist !== 'none') {
@@ -73,8 +75,6 @@ export function ArtifexPage() {
         }
         textToImagePrompt += `, aspect ratio: ${data.aspectRatio}`;
         finalPrompt = textToImagePrompt;
-    } else {
-        finalPrompt = `${data.prompt}, aspect ratio: ${data.aspectRatio}`;
     }
 
     try {
@@ -232,8 +232,8 @@ export function ArtifexPage() {
             </div>
           </ScrollArea>
           <div className="mt-auto pt-6">
-            <Button type="submit" disabled={isLoading} className="w-full text-lg py-6 font-headline">
-              {isLoading ? (
+            <Button type="submit" disabled={isLoading || isSubmitting} className="w-full text-lg py-6 font-headline">
+              {isLoading || isSubmitting ? (
                 <>
                   <Sparkles className="mr-2 h-5 w-5 animate-spin" />
                   Generating...
